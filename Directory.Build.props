@@ -1,0 +1,16 @@
+﻿<Project>
+
+    <!-- The Featurewise.Core version every project builds against. To build against a local checkout of
+         featurewise instead, while changing both, set FeaturewiseSource to its root, for example
+         dotnet build -p:FeaturewiseSource=../library, or as an environment variable. -->
+    <PropertyGroup>
+        <FeaturewiseVersion>0.1.0-preview.9</FeaturewiseVersion>
+    </PropertyGroup>
+
+    <!-- FeaturewiseSource as a full path. A relative one is relative to this repository's root, not to each
+         project; it gets a property of its own because a property given on the command line can't be changed. -->
+    <PropertyGroup Condition="'$(FeaturewiseSource)' != ''">
+        <FeaturewiseDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '$(FeaturewiseSource)'))</FeaturewiseDirectory>
+    </PropertyGroup>
+
+</Project>

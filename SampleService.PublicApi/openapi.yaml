@@ -1,0 +1,82 @@
+openapi: 3.1.0
+info:
+  title: SampleService public API
+  version: 1.0.0
+  description: >
+    Read access to things for other organisations' systems. Clients authenticate with OAuth 2.0
+    client credentials and send the access token as a bearer token.
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com
+    variables:
+      apiId:
+        default: example
+      region:
+        default: eu-west-2
+security:
+  - clientCredentials: [sample/things.read]
+paths:
+  /v1/things:
+    get:
+      operationId: getThings
+      summary: Every thing
+      responses:
+        "200":
+          description: The things.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [things]
+                properties:
+                  things:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Thing"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    clientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://example.auth.eu-west-2.amazoncognito.com/oauth2/token
+          scopes:
+            sample/things.read: Read things
+  responses:
+    Unauthorized:
+      description: The request has no valid access token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Forbidden:
+      description: The access token doesn't grant the operation's scope.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    Thing:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Problem:
+      description: An error, as RFC 9457 describes.
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string

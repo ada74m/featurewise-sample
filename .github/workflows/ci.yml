@@ -1,0 +1,121 @@
+# Builds and tests the sample service on every pull request and push to main, and checks its Terraform. Each push to main also publishes the service's package, versioned by date
+# and run, to the estate's artifacts bucket, and tags the commit with that version.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # Featurewise.Core and Featurewise.Hosting come from the owner's GitHub Packages feed, which nuget.config
+      # names. Each package must grant this repository read access (its settings: Manage Actions access).
+      - name: Restore
+        run: dotnet restore SampleService.sln
+        env:
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build, warning-free
+        run: dotnet build SampleService.sln -warnaserror --no-restore
+
+      - name: Test
+        run: dotnet test SampleService.sln --no-build
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: SampleService.Ui/package-lock.json
+
+      # The module builds with @ada74m/featurewise-ui, the shell's contract and module builder, from the
+      # owner's GitHub Packages registry, which its .npmrc names. The package must grant this repository
+      # read access (its settings: Manage Actions access).
+      - name: Test and build the UI module
+        working-directory: SampleService.Ui
+        run: npm ci && npm test && npm run build
+        env:
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.14.4
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive .
+
+      - name: Validate the service module
+        working-directory: Infrastructure
+        run: terraform init -backend=false -input=false && terraform validate
+
+      # Pull requests get a version too, so their package can be inspected, but only main's are published.
+      - name: Choose a version
+        id: version
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            echo "version=$(date -u +%Y.%m.%d).$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=pr${{ github.event.number }}.$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package
+        run: ./package.sh "${{ steps.version.outputs.version }}" out
+        env:
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate the dev environment against the package
+        working-directory: DevEnvironment
+        run: terraform init -backend=false -input=false && terraform validate
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sample-${{ steps.version.outputs.version }}
+          path: out/sample-${{ steps.version.outputs.version }}.zip
+          if-no-files-found: error
+
+  # Needs the estate's bootstrap: the repository variables AWS_REGION, ARTIFACTS_BUCKET and
+  # PUBLISH_ROLE_ARN, and the role it names, which trusts only this repository's main branch.
+  publish:
+    needs: build
+    if: github.event_name == 'push' && vars.ARTIFACTS_BUCKET != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: sample-${{ needs.build.outputs.version }}
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.PUBLISH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Publish the package
+        run: aws s3 cp "sample-$VERSION.zip" "s3://${{ vars.ARTIFACTS_BUCKET }}/sample/$VERSION.zip" --no-progress
+
+      - name: Tag the commit
+        run: |
+          git tag "sample/$VERSION"
+          git push origin "sample/$VERSION"

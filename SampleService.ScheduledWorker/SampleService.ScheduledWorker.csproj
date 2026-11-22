@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+        <AWSProjectType>Lambda</AWSProjectType>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\SampleService.Aws\SampleService.Aws.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Featurewise.Hosting as a package, or from a local checkout when FeaturewiseSource is set; see Directory.Build.props. -->
+        <PackageReference Include="Featurewise.Hosting" Version="$(FeaturewiseVersion)" Condition="'$(FeaturewiseSource)' == ''" />
+        <ProjectReference Include="$(FeaturewiseDirectory)Featurewise.Hosting/Featurewise.Hosting.csproj" Condition="'$(FeaturewiseSource)' != ''" />
+    </ItemGroup>
+
+</Project>

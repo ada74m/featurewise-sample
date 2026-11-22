@@ -1,0 +1,15 @@
+bin/
+obj/
+*.user
+*.DotSettings.user
+.idea/
+node_modules/
+SampleService.Ui/dist/
+
+# Terraform and the package package.sh builds
+.terraform/
+*.tfstate
+*.tfstate.*
+out/
+# Modules don't keep lock files; roots do.
+Infrastructure/.terraform.lock.hcl
