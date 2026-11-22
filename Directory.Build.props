@@ -4,7 +4,7 @@
          featurewise instead, while changing both, set FeaturewiseSource to its root, for example
          dotnet build -p:FeaturewiseSource=../library, or as an environment variable. -->
     <PropertyGroup>
-        <FeaturewiseVersion>0.1.0-preview.9</FeaturewiseVersion>
+        <FeaturewiseVersion>0.1.0-preview.12</FeaturewiseVersion>
     </PropertyGroup>
 
     <!-- FeaturewiseSource as a full path. A relative one is relative to this repository's root, not to each

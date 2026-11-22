@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -25,12 +24,8 @@ jobs:
         with:
           global-json-file: global.json
 
-      # Featurewise.Core and Featurewise.Hosting come from the owner's GitHub Packages feed, which nuget.config
-      # names. Each package must grant this repository read access (its settings: Manage Actions access).
       - name: Restore
         run: dotnet restore SampleService.sln
-        env:
-          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build, warning-free
         run: dotnet build SampleService.sln -warnaserror --no-restore
@@ -44,14 +39,9 @@ jobs:
           cache: npm
           cache-dependency-path: SampleService.Ui/package-lock.json
 
-      # The module builds with @ada74m/featurewise-ui, the shell's contract and module builder, from the
-      # owner's GitHub Packages registry, which its .npmrc names. The package must grant this repository
-      # read access (its settings: Manage Actions access).
       - name: Test and build the UI module
         working-directory: SampleService.Ui
         run: npm ci && npm test && npm run build
-        env:
-          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: hashicorp/setup-terraform@v4
         with:
@@ -76,8 +66,6 @@ jobs:
 
       - name: Package
         run: ./package.sh "${{ steps.version.outputs.version }}" out
-        env:
-          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate the dev environment against the package
         working-directory: DevEnvironment

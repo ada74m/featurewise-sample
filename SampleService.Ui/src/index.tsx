@@ -1,4 +1,4 @@
-import { featurewiseModule } from "@ada74m/featurewise-ui";
+import { featurewiseModule } from "@featurewise/ui";
 import * as deleteThing from "./features/DeleteThing";
 import * as renameThing from "./features/RenameThing";
 

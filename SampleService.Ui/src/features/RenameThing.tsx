@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { Host, Link, Renderer } from "@ada74m/featurewise-ui";
+import type { Host, Link, Renderer } from "@featurewise/ui";
 import { toastAndFollow } from "../kit";
 
 // RenameThing: Renamed says so, and goes back to the list. NeedsNewName asks for the name the link

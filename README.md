@@ -6,11 +6,9 @@ A minimal service built with Featurewise, and the starting point for a new one. 
 
 ## Building
 
-The service uses Featurewise as two packages from the owner's GitHub Packages feed, at the version `Directory.Build.props` names: the core references `Featurewise.Core`, which has what features, links and rules are written with, and each entrypoint references `Featurewise.Hosting`, which registers and invokes them. The core can't see `Features`, so it can't invoke a feature. Restoring them needs a GitHub token that can read packages:
+The service uses Featurewise as two packages from nuget.org, at the version `Directory.Build.props` names: the core references `Featurewise.Core`, which has what features, links and rules are written with, and each entrypoint references `Featurewise.Hosting`, which registers and invokes them. The core can't see `Features`, so it can't invoke a feature.
 
 ```
-gh auth refresh -s read:packages      # once
-export GITHUB_PACKAGES_TOKEN=$(gh auth token)
 dotnet test
 ```
 
@@ -35,7 +33,7 @@ To change Featurewise and the service together, build against a local checkout o
 | `SampleService.UiBackend` | The backend for the service's own UI, on API Gateway's HTTP API. Its contract is the features themselves, links and result cases included, so it serves only a UI shipped with the service. A link names its feature in a property that says its family, qualified by the service, as in `"$command":"sample/DeleteThing"`, so a UI shell combining several services' modules knows which service's backend to send it to, and how. `GET /{feature}?link=<the link's JSON>` invokes a query, which a reload or Back may repeat. `POST /{feature}` invokes a command with its link as the JSON body; a GET for a command is answered with 405, so no reload runs one again. A query may be posted too. The backend's URL names the service and feature, so a body may leave the feature out, but mustn't name another, or name it under another family. The caller comes from the JWT authorizer's claims, and an `Idempotency-Key` header becomes the invocation's idempotency key. A result is `application/json`, and an error is an RFC 9457 problem, `application/problem+json`, so the UI shell tells them apart by content type. |
 | `SampleService.PublicApi` | The API for other organisations' systems, on API Gateway's HTTP API. Its contract is its own, in `openapi.yaml`: versioned resources (`GET /v1/things`), HTTP status codes for outcomes, RFC 9457 problems for errors, and public shapes without links or result cases. A client may repeat a GET, so a GET route invokes only a query. Clients authenticate with OAuth client credentials from a Cognito user pool of their own, and the rule for each feature checks the token's scopes. |
 | `SampleService.ScheduledWorker` | EventBridge Scheduler. Each schedule's input carries its job's link, so one function runs every job, as a `SystemCaller` named after the schedule. |
-| `SampleService.Ui` | The service's module for the Featurewise UI shell: a React project, built by Vite into one ES module, with the shell's module builder, `featurewiseModule`, from the npm package `@ada74m/featurewise-ui`. It gives `Things` the address `things`, and handles three result cases itself: `DeleteThing`'s `Deleted` and `RenameThing`'s `Renamed` show a toast and go back to the list, and `RenameThing`'s `NeedsNewName` is a form asking for the name. The shell's generic renderer shows everything else. On AWS, the package uploads it to the UI shell's bucket under `modules/sample/`, when the environment passes in `shell_bucket`. |
+| `SampleService.Ui` | The service's module for the Featurewise UI shell: a React project, built by Vite into one ES module, with the shell's module builder, `featurewiseModule`, from the npm package `@featurewise/ui`. It gives `Things` the address `things`, and handles three result cases itself: `DeleteThing`'s `Deleted` and `RenameThing`'s `Renamed` show a toast and go back to the list, and `RenameThing`'s `NeedsNewName` is a form asking for the name. The shell's generic renderer shows everything else. On AWS, the package uploads it to the UI shell's bucket under `modules/sample/`, when the environment passes in `shell_bucket`. |
 | `SampleService.Tests` | Tests of the core's features, of each entrypoint fed the events AWS would send it, and of the local host. |
 
 Each entrypoint registers only the features it invokes, each with the rules that say who may invoke it there.
@@ -51,7 +49,6 @@ dotnet run --project SampleService.Local --urls http://localhost:5000
 To use it in a browser, build the shell and the module first. The shell is `featurewise-ui`, checked out beside this repository, as `../ui`:
 
 ```
-export GITHUB_PACKAGES_TOKEN=$(gh auth token)   # the module's builder comes from GitHub Packages
 (cd ../ui && npm install && npm run build)
 (cd SampleService.Ui && npm install && npm run build)
 ```
