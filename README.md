@@ -123,3 +123,7 @@ curl "$(terraform output -raw public_api_url)/v1/things" -H "Authorization: Bear
 ```
 
 The public API throttles all clients together; quotas per client would need API keys on a REST API, or WAF rules.
+
+## Licence
+
+MIT: see `LICENSE`.
