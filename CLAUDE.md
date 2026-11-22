@@ -28,7 +28,7 @@ The `sample` service: a minimal blank-domain service on AWS Lambda, the starting
 
 ## Infrastructure and deployment
 
-Each project keeps its Terraform in its own `Infrastructure/` module; the root `Infrastructure/` is the service's module, which wires them together and has no provider or state. `package.sh` builds the service's package (the modules plus `functions/*.zip`), which environments use as `s3::https://s3-<region>.amazonaws.com/<bucket>/sample/<version>.zip//Infrastructure`. `.github/workflows/ci.yml` builds, tests, checks Terraform and packages on every PR and push; pushes to main publish the package to the estate's artifacts bucket, versioned `<yyyy.mm.dd>.<run>`, and tag the commit. Real environments pin versions in the separate `featurewise-environments` repo, checked out at `../environments`. `DevEnvironment/` is a developer's own root over a locally built package, deployed by `deploy.sh`.
+Each project keeps its Terraform in its own `Infrastructure/` module; the root `Infrastructure/` is the service's module, which wires them together and has no provider or state. `package.sh` builds the service's package (the modules plus `functions/*.zip`), which environments use as `s3::https://s3-<region>.amazonaws.com/<bucket>/sample/<version>.zip//Infrastructure`. `.github/workflows/ci.yml` builds, tests, checks Terraform and packages on every PR and push; pushes to main publish the package to the estate's artifacts bucket, versioned `<yyyy.mm.dd>.<run>`, and tag the commit. Real environments pin versions in a separate, private environments repository, checked out at `../environments` where present. `DevEnvironment/` is a developer's own root over a locally built package, deployed by `deploy.sh`.
 
 ## Conventions
 

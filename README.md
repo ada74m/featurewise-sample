@@ -86,7 +86,7 @@ The UI backend has no CORS configuration, so a browser can call it only from the
 
 `package.sh <version> <out-dir>` builds the service's package: `sample-<version>.zip`, holding the Terraform modules in their places and each function's zip in `functions/`. An environment uses it as a module, `source = "s3::https://…/sample/<version>.zip//Infrastructure"`; the `//` makes Terraform fetch the whole package, so the modules find each other and the functions.
 
-The `CI` workflow (`.github/workflows/ci.yml`) builds the solution with warnings as errors, runs the tests, checks the Terraform, and builds a package, for every pull request and push to main. Each push to main also publishes the package to the estate's artifacts bucket as `sample/<yyyy.mm.dd>.<run>.zip` and tags the commit `sample/<version>`, once the repository has the variables `AWS_REGION`, `ARTIFACTS_BUCKET` and `PUBLISH_ROLE_ARN` from the estate's bootstrap. Environments, each pinning the services' versions, live in the separate `featurewise-environments` repository, which deploys them.
+The `CI` workflow (`.github/workflows/ci.yml`) builds the solution with warnings as errors, runs the tests, checks the Terraform, and builds a package, for every pull request and push to main. Each push to main also publishes the package to the estate's artifacts bucket as `sample/<yyyy.mm.dd>.<run>.zip` and tags the commit `sample/<version>`, once the repository has the variable `AWS_REGION` and the secrets `ARTIFACTS_BUCKET` and `PUBLISH_ROLE_ARN` from the estate's bootstrap; they're secrets so that the logs don't show the account they name. Environments, each pinning the services' versions, live in a separate repository, which deploys them.
 
 ## Deploying
 

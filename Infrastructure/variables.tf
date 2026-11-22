@@ -1,5 +1,5 @@
 variable "name_prefix" {
-  description = "The environment's prefix, such as adam-scratchpad. The service adds its own id, so its resources are named <name_prefix>-sample-…, apart from other services' and the UI shell's."
+  description = "The environment's prefix, such as staging. The service adds its own id, so its resources are named <name_prefix>-sample-…, apart from other services' and the UI shell's."
   type        = string
 }
 
